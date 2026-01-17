@@ -1,5 +1,5 @@
 const express = require('express');
-const { verifyConnection: verifyMinIO } = require('./config/minio.config');
+const { verifyMinioConnection: verifyMinIO } = require('./config/minio.config');
 const { connect: connectRabbitMQ, close: closeRabbitMQ } = require('./config/rabbitmq.config');
 const uploadRoutes = require('./routes/upload.routes');
 const logger = require('./utils/logger');

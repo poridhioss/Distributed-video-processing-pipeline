@@ -28,20 +28,39 @@ const fileFilter = (req, file, cb) => {
     .split(',')
     .map(type => type.trim());
   
+  // Check MIME type first
   if (allowedMimes.includes(file.mimetype)) {
     logger.info('File type accepted', {
       filename: file.originalname,
       mimetype: file.mimetype
     });
     cb(null, true);
-  } else {
-    logger.warn('File type rejected', {
-      filename: file.originalname,
-      mimetype: file.mimetype,
-      allowed: allowedMimes
-    });
-    cb(new Error(`Invalid file type. Allowed types: ${allowedMimes.join(', ')}`), false);
+    return;
   }
+  
+  // Fallback: Check file extension if MIME type is generic (e.g., from curl)
+  if (file.mimetype === 'application/octet-stream') {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const allowedExtensions = ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.flv', '.wmv'];
+    
+    if (allowedExtensions.includes(ext)) {
+      logger.info('File type accepted by extension', {
+        filename: file.originalname,
+        extension: ext,
+        mimetype: file.mimetype
+      });
+      cb(null, true);
+      return;
+    }
+  }
+  
+  // Reject if neither MIME type nor extension is valid
+  logger.warn('File type rejected', {
+    filename: file.originalname,
+    mimetype: file.mimetype,
+    allowed: allowedMimes
+  });
+  cb(new Error(`Invalid file type. Allowed types: ${allowedMimes.join(', ')}`), false);
 };
 
 // configure multer
