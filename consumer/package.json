@@ -1,0 +1,19 @@
+{
+  "name": "video-consumer-service",
+  "version": "1.0.0",
+  "description": "Video processing worker with FFmpeg",
+  "main": "src/worker.js",
+  "scripts": {
+    "start": "node src/worker.js",
+    "dev": "nodemon src/worker.js"
+  },
+  "dependencies": {
+    "minio": "^7.1.3",
+    "amqplib": "^0.10.3",
+    "uuid": "^9.0.1",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

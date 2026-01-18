@@ -89,6 +89,37 @@ services:
       - video-network
     restart: unless-stopped
 
+  # Consumer - Video Processing Service
+  consumer:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    ports:
+      - "${CONSUMER_PORT}:5000"
+    environment:
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_PORT=${MINIO_PORT}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_BUCKET=${MINIO_BUCKET}
+      - MINIO_USE_SSL=${MINIO_USE_SSL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE}
+      - NODE_ENV=${NODE_ENV}
+      - WORKER_ID
+    depends_on:
+      minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    volumes:
+      - ./consumer/src:/app/src  # Hot reload in development
+    networks:
+      - video-network
+    restart: unless-stopped
+
 volumes:
   minio_data:
     driver: local
