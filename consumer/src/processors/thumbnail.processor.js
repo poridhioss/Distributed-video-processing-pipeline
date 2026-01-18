@@ -98,12 +98,6 @@ const processVideo = async (task) => {
  */
 const extractThumbnails = (videoPath, outputDir) => {
   return new Promise((resolve, reject) => {
-    // FFmpeg command:
-    // -i: input file
-    // -vf fps=1/2: extract 1 frame per 2 seconds
-    // -q:v 2: JPEG quality (2 = high quality)
-    // frame_%04d.jpg: output pattern (frame_0001.jpg, frame_0002.jpg, ...)
-    
     const outputPattern = path.join(outputDir, 'frame_%04d.jpg');
     
     const ffmpegArgs = [
@@ -138,10 +132,11 @@ const extractThumbnails = (videoPath, outputDir) => {
         });
         resolve(frames.length);
       } else {
-        // Error
+        // Error - Log full stderr for debugging
         logger.error('FFmpeg failed', {
           exitCode: code,
-          stderr: stderr.substring(0, 500) // Log first 500 chars
+          stderr: stderr,  // Log full stderr
+          command: `ffmpeg ${ffmpegArgs.join(' ')}`
         });
         reject(new Error(`FFmpeg exited with code ${code}`));
       }

@@ -16,9 +16,22 @@ const uploadFile = async (filePath, objectName, metadata = {}) => {
 
         logger.info('Uploading file to MinIO...', { bucket: bucketName, object: objectName, size: fileStats.size });
 
-        // Upload filestream to minio
+        // Upload filestream to minio - putObject consumes the stream automatically
         const result = await minioClient.putObject(bucketName, objectName, fileStream, fileStats.size, metadata);
-        logger.info('File uploaded to MinIO successfully.', { bucket: bucketName, object: objectName, etag: result.etag });
+        
+        // Verify file was uploaded successfully and matches expected size
+        const stat = await minioClient.statObject(bucketName, objectName);
+        
+        if (stat.size !== fileStats.size) {
+            throw new Error(`Upload verification failed: expected ${fileStats.size} bytes, got ${stat.size} bytes`);
+        }
+        
+        logger.info('File uploaded to MinIO successfully.', { 
+            bucket: bucketName, 
+            object: objectName, 
+            etag: result.etag,
+            size: stat.size 
+        });
 
         return {
             bucket: bucketName,
