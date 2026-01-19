@@ -1,6 +1,6 @@
 const { spawn } = require('child_process');
 const path = require('path');
-const { downloadFile } = require('../services/minio.service');
+const { downloadFile, uploadThumbnails } = require('../services/minio.service');
 const { 
   ensureDirectory, 
   deleteFile, 
@@ -20,8 +20,6 @@ const FRAMES_DIR = '/tmp/frames';
  */
 const processVideo = async (task) => {
   const { videoId, bucket, key, originalName } = task;
-  
-  // Define paths
   const videoPath = path.join(DOWNLOAD_DIR, `${videoId}.mp4`);
   const framesDir = path.join(FRAMES_DIR, videoId);
   
@@ -58,6 +56,9 @@ const processVideo = async (task) => {
     if (thumbnails.length === 0) {
       throw new Error('No thumbnails were generated');
     }
+
+    // Get full paths of thumbnails
+    const thumbnailPaths = thumbnails.map(filename => path.join(framesDir, filename));
     
     logger.info('Thumbnail extraction completed', {
       videoId,
@@ -65,14 +66,30 @@ const processVideo = async (task) => {
       thumbnails: thumbnails.slice(0, 5) // Log first 5
     });
     
-    // Step 5: Cleanup (we'll upload to MinIO in Lab 3)
+    // Step 5: Upload thumbnails back to MinIO
+    logger.info('Uploading thumbnails to MinIO', { 
+      videoId,
+      count: thumbnailPaths.length
+    });
+
+    const uploadResults = await uploadThumbnails(videoId, thumbnailPaths);
+
+    logger.info('Thumbnails uploaded to MinIO', {
+      videoId,
+      uploadedCount: uploadResults.length,
+      totalSize: uploadResults.reduce((sum, r) => sum + r.size, 0)
+    });
+
+    // Step 6: Cleanup local files
     deleteFile(videoPath);
-    // Keep frames for now (will upload in Lab 3)
+    deleteDirectory(framesDir);
+
+    logger.info('Video processing completed successfully', { videoId, thumbnailCount: thumbnails.length });
     
     return {
       videoId,
       thumbnailCount: thumbnails.length,
-      framesDir
+      uploadedSize: uploadResults.reduce((sum, r) => sum + r.size, 0)
     };
     
   } catch (error) {

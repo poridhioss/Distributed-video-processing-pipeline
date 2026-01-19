@@ -3,11 +3,7 @@ const logger = require('../utils/logger');
 const fs = require('fs');
 const path = require('path');
 
-/**
- * Download file from MinIO to local path
- * @param {string} objectName - Object key in MinIO
- * @param {string} localPath - Local file path to save
- */
+// Download file from MinIO to local path
 const downloadFile = async (objectName, localPath) => {
   try {
     logger.info('Downloading file from MinIO', {
@@ -44,6 +40,88 @@ const downloadFile = async (objectName, localPath) => {
     logger.error('MinIO download failed', {
       bucket: bucketName,
       object: objectName,
+      error: error.message
+    });
+    throw error;
+  }
+};
+
+
+/**
+ * Upload a single file to MinIO
+ * @param {string} localPath - Local file path
+ * @param {string} objectName - Destination object name in MinIO
+ */
+const uploadFile = async (localPath, objectName) => {
+  try {
+    const stats = fs.statSync(localPath)
+    const fileStream = fs.createReadStream(localPath);
+    
+    logger.debug('Uploading file to MinIO', {
+      bucket: bucketName,
+      object: objectName,
+      size: stats.size
+    });
+
+    await minioClient.putObject(
+      bucketName, 
+      objectName, 
+      fileStream, 
+      stats.size,
+      { 'Content-Type': 'image/jpeg' }
+    );
+
+    logger.debug('File uploaded successfully', {
+      bucket: bucketName,
+      object: objectName
+    });
+
+    return {
+      bucket: bucketName,
+      key: objectName,
+      size: stats.size
+    }
+  } catch (error) {
+    logger.error('MinIO upload failed', {
+      bucket: bucketName,
+      object: objectName,
+      error: error.message
+    });
+    throw error;
+  }
+};
+
+/**
+ * Upload multiple thumbnails to MinIO
+ * @param {string} videoId - Video ID for directory structure
+ * @param {string[]} thumbnailPaths - Array of local thumbnail paths
+ */
+const uploadThumbnails = async (videoId, thumbnailPaths) => {
+  try {
+    logger.info('Uploading thumbnails to MinIO', {
+      videoId,
+      count: thumbnailPaths.length
+    });
+    
+    const uploadPromises = thumbnailPaths.map((thumbnailPath) => {
+      const filename = path.basename(thumbnailPath);
+      const objectName = `thumbnails/${videoId}/${filename}`;
+      return uploadFile(thumbnailPath, objectName);
+    });
+    
+    const results = await Promise.all(uploadPromises);
+    
+    logger.info('All thumbnails uploaded successfully', {
+      videoId,
+      count: results.length,
+      totalSize: results.reduce((sum, r) => sum + r.size, 0)
+    });
+    
+    return results;
+    
+  } catch (error) {
+    logger.error('Failed to upload thumbnails', {
+      videoId,
       error: error.message
     });
     throw error;
@@ -90,5 +168,7 @@ const getObjectMetadata = async (objectName) => {
 module.exports = {
   downloadFile,
   objectExists,
-  getObjectMetadata
+  getObjectMetadata,
+  uploadFile,
+  uploadThumbnails
 };
