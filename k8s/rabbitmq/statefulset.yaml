@@ -46,6 +46,8 @@ spec:
             - ping
           initialDelaySeconds: 60
           periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
         readinessProbe:
           exec:
             command:
@@ -54,13 +56,15 @@ spec:
             - check_port_connectivity
           initialDelaySeconds: 20
           periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
         resources:
           requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
             memory: "512Mi"
             cpu: "500m"
-          limits:
-            memory: "2Gi"
-            cpu: "1000m"
       volumes:
       - name: rabbitmq-storage
         persistentVolumeClaim:
