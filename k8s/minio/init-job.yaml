@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-init
+  namespace: video-processing
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: mc
+        image: minio/mc:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          mc alias set myminio http://minio-service:9000 $MINIO_ACCESS_KEY $MINIO_SECRET_KEY
+          mc mb myminio/videos --ignore-existing
+          mc anonymous set public myminio/videos
+          echo "MinIO bucket initialized successfully"
+        env:
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: video-secrets
+              key: MINIO_ACCESS_KEY
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: video-secrets
+              key: MINIO_SECRET_KEY
+      initContainers:
+      - name: wait-for-minio
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - |
+          until nc -z minio-service 9000; do
+            echo "Waiting for MinIO..."
+            sleep 2
+          done
