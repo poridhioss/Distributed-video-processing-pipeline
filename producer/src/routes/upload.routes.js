@@ -5,6 +5,7 @@ const fs = require('fs');
 const { upload, handleUploadError } = require('../middleware/upload.middleware');
 const { uploadFile, deleteFile } = require('../services/minio.service');
 const { queueVideoProcessing } = require('../services/queue.service');
+const { createVideoRecord, deleteVideoRecord } = require('../services/database.service');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -49,7 +50,16 @@ router.post('/', upload.single('video'), handleUploadError, async (req, res) => 
             }
         )
 
-        // Step 2: Queue video processing task
+        // Step 2: Create database record with status 'uploaded'
+        await createVideoRecord({
+            id: videoId,
+            originalName: req.file.originalname,
+            fileSize: req.file.size,
+            mimeType: req.file.mimetype,
+            minioKey: uploadResult.key
+        });
+
+        // Step 3: Queue video processing task
         const taskMessage = await queueVideoProcessing({
             videoId,
             bucket: uploadResult.bucket,
@@ -59,7 +69,7 @@ router.post('/', upload.single('video'), handleUploadError, async (req, res) => 
             mimeType: req.file.mimetype
         })
 
-        // Step 3: Remove local file after upload
+        // Step 4: Remove local file after upload
         fs.unlink(req.file.path, (err) => {
             if (err) {
                 logger.warn('Failed to delete local file after upload', { path: req.file.path, error: err.message });
@@ -83,6 +93,14 @@ router.post('/', upload.single('video'), handleUploadError, async (req, res) => 
         logger.info('Upload request completed successfully', { videoId: taskMessage.videoId, key: taskMessage.key});
     } catch (error) {
         logger.error('Upload request failed', { error: error.message, stack: error.stack });
+
+        // Rollback: Delete database record if created
+        try {
+            await deleteVideoRecord(videoId);
+            logger.info('Rollback: Database record deleted', { videoId });
+        } catch (dbError) {
+            logger.error('Rollback failed: could not delete database record', { videoId, error: dbError.message });
+        }
 
         // Rollback: Delete file from MinIO if uploaded
         if (objectName) {

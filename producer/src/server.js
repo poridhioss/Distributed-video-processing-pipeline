@@ -1,6 +1,7 @@
 const express = require('express');
 const { verifyMinioConnection: verifyMinIO } = require('./config/minio.config');
 const { connect: connectRabbitMQ, close: closeRabbitMQ } = require('./config/rabbitmq.config');
+const { testConnection: testDatabase, closePool: closeDatabase } = require('./config/database.config');
 const uploadRoutes = require('./routes/upload.routes');
 const logger = require('./utils/logger');
 
@@ -42,6 +43,10 @@ const startServer = async () => {
   try {
     logger.info('Starting Producer Service...');
     
+    // Test database connection
+    await testDatabase();
+    logger.info('✓ Database connected');
+    
     // Initialize MinIO connection
     await verifyMinIO();
     logger.info('✓ MinIO connected');
@@ -69,6 +74,9 @@ const shutdown = async () => {
   try {
     await closeRabbitMQ();
     logger.info('✓ RabbitMQ connection closed');
+    
+    await closeDatabase();
+    logger.info('✓ Database pool closed');
     
     process.exit(0);
   } catch (error) {
