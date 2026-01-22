@@ -1,5 +1,6 @@
 const { verifyConnection: verifyMinIO } = require('./config/minio.config');
 const { connect: connectRabbitMQ, close: closeRabbitMQ } = require('./config/rabbitmq.config');
+const { testConnection: testDatabase, closePool: closeDatabase } = require('./config/database.config');
 const { startConsuming } = require('./services/queue.service');
 const { processVideo } = require('./processors/thumbnail.processor');
 const logger = require('./utils/logger');
@@ -9,24 +10,28 @@ const WORKER_ID = process.env.HOSTNAME || 'worker-1';
 const startWorker = async () => {
   try {
     logger.info('Starting Video Processing Worker', { workerId: WORKER_ID });
-    
-    // Step 1: Verify MinIO connection
+
+    // Step 1: Test database connection
+    await testDatabase();
+    logger.info('✓ Database connected');
+
+    // Step 2: Verify MinIO connection
     await verifyMinIO();
     logger.info('✓ MinIO connected');
-    
-    // Step 2: Connect to RabbitMQ
+
+    // Step 3: Connect to RabbitMQ
     await connectRabbitMQ();
     logger.info('✓ RabbitMQ connected');
-    
-    // Step 3: Start consuming messages
+
+    // Step 4: Start consuming messages
     logger.info('Worker ready to process tasks');
     await startConsuming(processVideo);
-    
+
     logger.info('Worker started successfully', {
       workerId: WORKER_ID,
       status: 'LISTENING'
     });
-    
+
   } catch (error) {
     logger.error('Failed to start worker', {
       workerId: WORKER_ID,
@@ -40,15 +45,19 @@ const startWorker = async () => {
 
 const shutdown = async (signal) => {
   logger.info('Shutdown signal received', { signal, workerId: WORKER_ID });
-  
+
   try {
     // Close RabbitMQ connection
     await closeRabbitMQ();
     logger.info('✓ RabbitMQ connection closed');
-    
+
+    // Close database pool
+    await closeDatabase();
+    logger.info('✓ Database pool closed');
+
     logger.info('Worker shutdown complete', { workerId: WORKER_ID });
     process.exit(0);
-    
+
   } catch (error) {
     logger.error('Error during shutdown', {
       workerId: WORKER_ID,

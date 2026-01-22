@@ -129,6 +129,82 @@ const uploadThumbnails = async (videoId, thumbnailPaths) => {
 };
 
 /**
+ * Upload sprite sheet to MinIO
+ * @param {string} videoId - Video ID
+ * @param {string} spritePath - Local path to sprite sheet
+ * @param {number} spriteIndex - Index of sprite (default: 0)
+ * @returns {Promise<Object>} Upload result
+ */
+const uploadSpriteSheet = async (videoId, spritePath, spriteIndex = 0) => {
+  try {
+    const objectName = `sprites/${videoId}/sprite_${spriteIndex}.jpg`;
+    const result = await uploadFile(spritePath, objectName);
+
+    logger.info('Sprite sheet uploaded', {
+      videoId,
+      spriteIndex,
+      objectName,
+      size: result.size
+    });
+
+    return result;
+  } catch (error) {
+    logger.error('Failed to upload sprite sheet', {
+      videoId,
+      spriteIndex,
+      error: error.message
+    });
+    throw error;
+  }
+};
+
+/**
+ * Upload metadata.json to MinIO
+ * @param {string} videoId - Video ID
+ * @param {Object} metadata - Metadata object
+ * @returns {Promise<Object>} Upload result
+ */
+const uploadMetadata = async (videoId, metadata) => {
+  try {
+    const objectName = `metadata/${videoId}/metadata.json`;
+    const metadataJson = JSON.stringify(metadata, null, 2);
+    const buffer = Buffer.from(metadataJson, 'utf-8');
+
+    logger.debug('Uploading metadata to MinIO', {
+      videoId,
+      objectName,
+      size: buffer.length
+    });
+
+    await minioClient.putObject(
+      bucketName,
+      objectName,
+      buffer,
+      buffer.length,
+      { 'Content-Type': 'application/json' }
+    );
+
+    logger.info('Metadata uploaded successfully', {
+      videoId,
+      objectName,
+      size: buffer.length
+    });
+
+    return {
+      bucket: bucketName,
+      key: objectName,
+      size: buffer.length
+    };
+  } catch (error) {
+    logger.error('Failed to upload metadata', {
+      videoId,
+      error: error.message
+    });
+    throw error;
+  }
+};
+
+/**
  * Check if object exists in MinIO
  */
 const objectExists = async (objectName) => {
@@ -170,5 +246,7 @@ module.exports = {
   objectExists,
   getObjectMetadata,
   uploadFile,
-  uploadThumbnails
+  uploadThumbnails,
+  uploadSpriteSheet,
+  uploadMetadata
 };
