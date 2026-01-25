@@ -48,3 +48,48 @@ Content-Type: application/pdf
 
 < ./sample-document.pdf
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### ====================================
+### Phase 2: Video API Endpoints
+### ====================================
+
+### 7. Get Video Status
+# Replace {videoId} with an actual video ID from upload response
+GET {{baseUrl}}/api/videos/{videoId}/status
+Content-Type: {{contentType}}
+
+### 8. Get Video Metadata
+# Replace {videoId} with a video ID that has completed processing
+GET {{baseUrl}}/api/videos/{videoId}/metadata
+Content-Type: {{contentType}}
+
+### 9. Stream Video
+# Replace {videoId} with an actual video ID
+GET {{baseUrl}}/api/videos/{videoId}/stream
+Range: bytes=0-1023
+
+### 10. Get Sprite Sheet
+# Replace {videoId} with a video ID that has completed processing
+# index starts from 0
+GET {{baseUrl}}/api/videos/{videoId}/sprite/0
+Content-Type: {{contentType}}
+
+### 11. List All Videos
+GET {{baseUrl}}/api/videos
+Content-Type: {{contentType}}
+
+### 12. List Videos by Status - Uploaded
+GET {{baseUrl}}/api/videos?status=uploaded
+Content-Type: {{contentType}}
+
+### 13. List Videos by Status - Processing
+GET {{baseUrl}}/api/videos?status=processing
+Content-Type: {{contentType}}
+
+### 14. List Videos by Status - Completed
+GET {{baseUrl}}/api/videos?status=completed
+Content-Type: {{contentType}}
+
+### 15. List Videos by Status - Failed
+GET {{baseUrl}}/api/videos?status=failed
+Content-Type: {{contentType}}

@@ -1,19 +1,28 @@
 const express = require('express');
+const cors = require('cors');
 const { verifyMinioConnection: verifyMinIO } = require('./config/minio.config');
 const { connect: connectRabbitMQ, close: closeRabbitMQ } = require('./config/rabbitmq.config');
 const { testConnection: testDatabase, closePool: closeDatabase } = require('./config/database.config');
 const uploadRoutes = require('./routes/upload.routes');
+const videoRoutes = require('./routes/video.routes');
 const logger = require('./utils/logger');
 
 const app = express();
 const PORT = process.env.PRODUCER_PORT || 4000;
 
 // Middleware
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/upload', uploadRoutes);
+app.use('/api/videos', videoRoutes);
 
 // health check endpoint
 app.get('/health', (req, res) => {
@@ -32,6 +41,11 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       upload: 'POST /upload',
+      videos: 'GET /api/videos',
+      videoStatus: 'GET /api/videos/:videoId/status',
+      videoMetadata: 'GET /api/videos/:videoId/metadata',
+      videoStream: 'GET /api/videos/:videoId/stream',
+      videoSprite: 'GET /api/videos/:videoId/sprite/:index',
       health: 'GET /health'
     }
   });
