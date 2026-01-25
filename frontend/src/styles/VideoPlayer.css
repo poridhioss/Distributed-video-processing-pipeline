@@ -1,6 +1,6 @@
 /* Video Player Styles */
 .player-container {
-  max-width: 1400px;
+  max-width: 1000px;
   margin: 0 auto;
   background: white;
   border-radius: 16px;
@@ -149,11 +149,13 @@
 }
 
 .preview-thumbnail {
+  display: block;
   border: 3px solid white;
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   background-color: #000;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .preview-time {

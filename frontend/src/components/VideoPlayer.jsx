@@ -15,15 +15,22 @@ const VideoPlayer = () => {
   const playerRef = useRef(null);
   const [videoStatus, setVideoStatus] = useState(null);
   const [statusError, setStatusError] = useState(null);
+  const [isReady, setIsReady] = useState(false);
 
   const { metadata, loading: metadataLoading, error: metadataError } = useVideoMetadata(videoId);
   const { spritesLoaded, progress: spriteProgress, error: spriteError } = useSpritePreload(videoId, metadata);
 
   // Check video status
   useEffect(() => {
+    let isMounted = true;
+
     const checkStatus = async () => {
       try {
         const status = await getVideoStatus(videoId);
+        console.log('Video status:', status);
+        
+        if (!isMounted) return;
+        
         setVideoStatus(status);
 
         if (status.status !== 'completed') {
@@ -31,18 +38,36 @@ const VideoPlayer = () => {
         }
       } catch (err) {
         console.error('Failed to fetch video status:', err);
-        setStatusError('Failed to load video status');
+        if (!isMounted) return;
+        
+        const errorMsg = err.response?.data?.message || err.message || 'Failed to load video status';
+        setStatusError(`Error loading video: ${errorMsg}`);
       }
     };
 
     checkStatus();
+
+    return () => {
+      isMounted = false;
+    };
   }, [videoId]);
+
+  // Set ready state when all loading is complete
+  useEffect(() => {
+    if (videoStatus?.status === 'completed' && !metadataLoading && spritesLoaded) {
+      console.log('All assets loaded, player ready');
+      setIsReady(true);
+    }
+  }, [videoStatus, metadataLoading, spritesLoaded]);
 
   // Initialize Video.js player
   useEffect(() => {
-    if (!videoRef.current || videoStatus?.status !== 'completed') return;
+    if (!isReady || !videoRef.current || playerRef.current) {
+      return;
+    }
 
     const videoElement = videoRef.current;
+    console.log('Initializing Video.js player...');
 
     // Initialize player
     const player = videojs(videoElement, {
@@ -71,15 +96,18 @@ const VideoPlayer = () => {
       type: 'video/mp4',
     });
 
+    console.log('Video.js player initialized successfully');
+
     return () => {
       if (playerRef.current) {
+        console.log('Disposing Video.js player');
         playerRef.current.dispose();
         playerRef.current = null;
       }
     };
-  }, [videoId, videoStatus]);
+  }, [isReady, videoId]);
 
-  const isLoading = metadataLoading || !spritesLoaded;
+  const isLoading = !isReady && !statusError && !metadataError && !spriteError;
   const hasError = metadataError || spriteError || statusError;
 
   if (hasError) {
@@ -104,16 +132,18 @@ const VideoPlayer = () => {
           <div className="loading-spinner"></div>
           <h2>Loading video...</h2>
           <div className="loading-details">
-            {metadataLoading && <p>✓ Loading metadata...</p>}
-            {!metadataLoading && metadata && (
-              <>
-                <p>✓ Metadata loaded</p>
-                <p>
-                  {spritesLoaded 
-                    ? '✓ Sprites preloaded' 
-                    : `⏳ Preloading sprites... ${spriteProgress}%`}
-                </p>
-              </>
+            {!videoStatus && <p>⏳ Checking video status...</p>}
+            {videoStatus && videoStatus.status !== 'completed' && (
+              <p>⏳ Video is {videoStatus.status}...</p>
+            )}
+            {videoStatus?.status === 'completed' && metadataLoading && (
+              <p>⏳ Loading metadata...</p>
+            )}
+            {videoStatus?.status === 'completed' && !metadataLoading && metadata && !spritesLoaded && (
+              <p>⏳ Preloading sprites... {spriteProgress}%</p>
+            )}
+            {videoStatus?.status === 'completed' && !metadataLoading && metadata && spritesLoaded && (
+              <p>✓ Preparing player...</p>
             )}
           </div>
         </div>
@@ -127,7 +157,7 @@ const VideoPlayer = () => {
         <button className="back-button" onClick={() => navigate('/')}>
           ← Back to Videos
         </button>
-        <h2 className="video-title">{videoStatus?.original_name || 'Video Player'}</h2>
+        <h2 className="video-title">{videoStatus?.originalName || 'Video Player'}</h2>
       </div>
 
       <div className="video-player-wrapper">

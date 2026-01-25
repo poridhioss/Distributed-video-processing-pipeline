@@ -15,7 +15,7 @@ const VideoList = () => {
       setLoading(true);
       const statusFilter = filter === 'all' ? null : filter;
       const data = await listVideos(statusFilter);
-      setVideos(data);
+      setVideos(data.videos);
       setError(null);
     } catch (err) {
       console.error('Failed to fetch videos:', err);
@@ -27,8 +27,9 @@ const VideoList = () => {
 
   useEffect(() => {
     fetchVideos();
-    
-    // Auto-refresh every 5 seconds if there are processing videos
+  }, [filter]);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       if (videos.some(v => v.status === 'processing' || v.status === 'uploaded')) {
         fetchVideos();
@@ -36,7 +37,7 @@ const VideoList = () => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [filter]);
+  }, [videos]);
 
   const getStatusBadge = (status) => {
     const badges = {
@@ -60,8 +61,9 @@ const VideoList = () => {
   };
 
   const handleVideoClick = (video) => {
+    console.log(video)
     if (video.status === 'completed') {
-      navigate(`/watch/${video.id}`);
+      navigate(`/watch/${video.videoId}`);
     }
   };
 
@@ -120,7 +122,7 @@ const VideoList = () => {
         <div className="video-grid">
           {videos.map((video) => (
             <div
-              key={video.id}
+              key={video.videoId}
               className={`video-card ${video.status === 'completed' ? 'clickable' : ''}`}
               onClick={() => handleVideoClick(video)}
             >
@@ -130,32 +132,32 @@ const VideoList = () => {
               </div>
 
               <div className="video-card-body">
-                <h3 className="video-title" title={video.original_name}>
-                  {video.original_name}
+                <h3 className="video-title" title={video.originalName}>
+                  {video.originalName}
                 </h3>
                 <div className="video-meta">
                   <p className="video-info">
                     <span className="meta-label">Uploaded:</span>
-                    <span className="meta-value">{formatDate(video.created_at)}</span>
+                    <span className="meta-value">{formatDate(video.createdAt)}</span>
                   </p>
                   {video.video_duration && (
                     <p className="video-info">
                       <span className="meta-label">Duration:</span>
                       <span className="meta-value">
-                        {Math.floor(video.video_duration / 60)}:{String(Math.floor(video.video_duration % 60)).padStart(2, '0')}
+                        {Math.floor(video.videoDuration / 60)}:{String(Math.floor(video.videoDuration % 60)).padStart(2, '0')}
                       </span>
                     </p>
                   )}
                   {video.thumbnail_count > 0 && (
                     <p className="video-info">
                       <span className="meta-label">Thumbnails:</span>
-                      <span className="meta-value">{video.thumbnail_count}</span>
+                      <span className="meta-value">{video.thumbnailCount}</span>
                     </p>
                   )}
                 </div>
 
-                {video.error_message && (
-                  <p className="error-text">{video.error_message}</p>
+                {video.error && (
+                  <p className="error-text">{video.error}</p>
                 )}
               </div>
 

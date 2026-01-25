@@ -17,6 +17,9 @@ const TimelinePreview = ({ videoId, metadata, hoveredTime, position }) => {
   const sprite = metadata.spriteSheets[thumbnail.spriteIndex];
   const spriteUrl = getSpriteUrl(videoId, thumbnail.spriteIndex);
 
+  const spriteWidth = metadata.spriteWidth
+  const spriteHeight = metadata.spriteHeight
+  
   return (
     <div
       className="timeline-preview"
@@ -30,11 +33,14 @@ const TimelinePreview = ({ videoId, metadata, hoveredTime, position }) => {
         style={{
           width: `${metadata.thumbnailWidth}px`,
           height: `${metadata.thumbnailHeight}px`,
-          backgroundImage: `url(${spriteUrl})`,
-          backgroundSize: `${metadata.spriteWidth}px ${metadata.spriteHeight}px`,
+          backgroundImage: `url("${spriteUrl}")`,
+          backgroundSize: `${spriteWidth}px ${spriteHeight}px`,
           backgroundPosition: `-${thumbnail.x}px -${thumbnail.y}px`,
           backgroundRepeat: 'no-repeat',
+          imageRendering: 'auto',
+          backgroundColor: '#000',
         }}
+        title={`Thumbnail at ${formatTime(thumbnail.time)}`}
       />
       <div className="preview-time">{formatTime(thumbnail.time)}</div>
     </div>

@@ -28,7 +28,7 @@ const generateMetadata = (params) => {
 
   // Calculate sprite dimensions
   const spriteWidth = thumbnailWidth * columns;
-  const spriteHeight = thumbnailHeight * Math.ceil(frameCount / columns);
+  const spriteHeight = thumbnailHeight * rows;
 
   // Generate sprite sheet metadata
   const spriteSheet = {
@@ -64,7 +64,7 @@ const generateMetadata = (params) => {
     spriteWidth,
     spriteHeight,
     columns,
-    rows: Math.ceil(frameCount / columns),
+    rows: rows,
     spriteSheets: [spriteSheet],
     thumbnails
   };
