@@ -5,7 +5,7 @@ import 'video.js/dist/video-js.css';
 import { getVideoStreamUrl, getVideoStatus } from '../services/api';
 import useVideoMetadata from '../hooks/useVideoMetadata';
 import useSpritePreload from '../hooks/useSpritePreload';
-import CustomTimeline from './CustomTimeline';
+import ThumbnailPlugin from './ThumbnailPlugin';
 import '../styles/VideoPlayer.css';
 
 const VideoPlayer = () => {
@@ -76,9 +76,9 @@ const VideoPlayer = () => {
       preload: 'auto',
       fluid: true,
       controlBar: {
-        progressControl: false, // Disable default progress bar (we use custom timeline)
         children: [
           'playToggle',
+          'progressControl',
           'volumePanel',
           'currentTimeDisplay',
           'timeDivider',
@@ -96,6 +96,15 @@ const VideoPlayer = () => {
       type: 'video/mp4',
     });
 
+    // Pass metadata to player for thumbnail plugin
+    player.videoId = videoId;
+    player.thumbnailMetadata = metadata;
+    player.spritesLoaded = spritesLoaded;
+
+    // Add thumbnail preview component
+    const thumbnailPreview = new ThumbnailPlugin(player);
+    player.addChild(thumbnailPreview);
+
     console.log('Video.js player initialized successfully');
 
     return () => {
@@ -105,7 +114,7 @@ const VideoPlayer = () => {
         playerRef.current = null;
       }
     };
-  }, [isReady, videoId]);
+  }, [isReady, videoId, metadata, spritesLoaded]);
 
   const isLoading = !isReady && !statusError && !metadataError && !spriteError;
   const hasError = metadataError || spriteError || statusError;
@@ -167,13 +176,6 @@ const VideoPlayer = () => {
             className="video-js vjs-big-play-centered"
           />
         </div>
-
-        <CustomTimeline
-          videoId={videoId}
-          videoRef={videoRef}
-          metadata={metadata}
-          spritesLoaded={spritesLoaded}
-        />
       </div>
 
       <div className="video-info">

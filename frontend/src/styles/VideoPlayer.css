@@ -305,3 +305,71 @@
 .video-js .vjs-slider {
   background-color: rgba(255, 255, 255, 0.3);
 }
+
+/* Video.js Thumbnail Preview Plugin */
+.vjs-thumbnail-preview {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: thumbnailFadeIn 0.15s ease;
+}
+
+@keyframes thumbnailFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vjs-thumbnail-image {
+  display: block;
+  border: 3px solid white;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  background-color: #000;
+  overflow: hidden;
+  flex-shrink: 0;
+  image-rendering: auto;
+}
+
+.vjs-thumbnail-time {
+  margin-top: 8px;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Enhanced progress bar hover effect */
+.video-js .vjs-progress-control:hover .vjs-progress-holder {
+  font-size: 1.7em;
+}
+
+.video-js .vjs-progress-control .vjs-mouse-display {
+  display: none; /* Hide default time tooltip */
+}
+
+/* Responsive adjustments for thumbnail preview */
+@media (max-width: 768px) {
+  .vjs-thumbnail-preview {
+    transform: scale(0.85);
+    transform-origin: top center;
+  }
+  
+  .vjs-thumbnail-time {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+}
