@@ -14,82 +14,59 @@ Content-Type: {{contentType}}
 GET {{baseUrl}}/health
 Content-Type: {{contentType}}
 
-### 3. Upload Video - Success Case
+### 3. Upload Video
 # Note: Update the file path to point to an actual video file on your system
 POST {{baseUrl}}/upload
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="video"; filename="sample-video.mp4"
+Content-Disposition: form-data; name="video"; filename="poridhi-tutorials.mp4"
 Content-Type: video/mp4
 
-< ./sample-video.mp4
-------WebKitFormBoundary7MA4YWxkTrZu0gW--
-
-### 5. Upload Video - No File (Error Case)
-POST {{baseUrl}}/upload
-Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
-
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="notVideo"; filename="test.mp4"
-Content-Type: video/mp4
-
-< ./sample-video.mp4
-------WebKitFormBoundary7MA4YWxkTrZu0gW--
-
-### 6. Upload Video - Invalid File Type (Error Case)
-# This will fail if the file type is not in the allowed list
-POST {{baseUrl}}/upload
-Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
-
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="video"; filename="document.pdf"
-Content-Type: application/pdf
-
-< ./sample-document.pdf
+< ./Asset/poridhi-tutorials.mp4
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
 ### ====================================
 ### Phase 2: Video API Endpoints
 ### ====================================
 
-### 7. Get Video Status
+### 1. Get Video Status
 # Replace {videoId} with an actual video ID from upload response
 GET {{baseUrl}}/api/videos/{videoId}/status
 Content-Type: {{contentType}}
 
-### 8. Get Video Metadata
+### 2. Get Video Metadata
 # Replace {videoId} with a video ID that has completed processing
 GET {{baseUrl}}/api/videos/{videoId}/metadata
 Content-Type: {{contentType}}
 
-### 9. Stream Video
+### 3. Stream Video
 # Replace {videoId} with an actual video ID
 GET {{baseUrl}}/api/videos/{videoId}/stream
 Range: bytes=0-1023
 
-### 10. Get Sprite Sheet
+### 4. Get Sprite Sheet
 # Replace {videoId} with a video ID that has completed processing
 # index starts from 0
 GET {{baseUrl}}/api/videos/{videoId}/sprite/0
 Content-Type: {{contentType}}
 
-### 11. List All Videos
+### 5. List All Videos
 GET {{baseUrl}}/api/videos
 Content-Type: {{contentType}}
 
-### 12. List Videos by Status - Uploaded
+### 6. List Videos by Status - Uploaded
 GET {{baseUrl}}/api/videos?status=uploaded
 Content-Type: {{contentType}}
 
-### 13. List Videos by Status - Processing
+### 17. List Videos by Status - Processing
 GET {{baseUrl}}/api/videos?status=processing
 Content-Type: {{contentType}}
 
-### 14. List Videos by Status - Completed
+### 8. List Videos by Status - Completed
 GET {{baseUrl}}/api/videos?status=completed
 Content-Type: {{contentType}}
 
-### 15. List Videos by Status - Failed
+### 9. List Videos by Status - Failed
 GET {{baseUrl}}/api/videos?status=failed
 Content-Type: {{contentType}}
