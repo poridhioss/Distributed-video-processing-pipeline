@@ -2,11 +2,13 @@ import axios from 'axios';
 
 // Configure axios instance with base URL
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000',
-  timeout: 30000,
+  baseURL: import.meta.env.VITE_API_URL || '',
+  timeout: 300000, // 5 minutes for large uploads
   headers: {
     'Content-Type': 'application/json',
   },
+  maxContentLength: Infinity,
+  maxBodyLength: Infinity,
 });
 
 /**
@@ -23,6 +25,9 @@ export const uploadVideo = async (file, onProgress) => {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
+    timeout: 300000, // 5 minutes
+    maxContentLength: Infinity,
+    maxBodyLength: Infinity,
     onUploadProgress: (progressEvent) => {
       const percentCompleted = Math.round(
         (progressEvent.loaded * 100) / progressEvent.total
@@ -60,7 +65,7 @@ export const getVideoMetadata = async (videoId) => {
  * @returns {string} Full URL to video stream
  */
 export const getVideoStreamUrl = (videoId) => {
-  const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+  const baseURL = import.meta.env.VITE_API_URL || '';
   return `${baseURL}/api/videos/${videoId}/stream`;
 };
 
@@ -71,7 +76,7 @@ export const getVideoStreamUrl = (videoId) => {
  * @returns {string} Full URL to sprite sheet
  */
 export const getSpriteUrl = (videoId, index) => {
-  const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+  const baseURL = import.meta.env.VITE_API_URL || '';
   return `${baseURL}/api/videos/${videoId}/sprite/${index}`;
 };
 
