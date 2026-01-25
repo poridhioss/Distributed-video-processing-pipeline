@@ -171,6 +171,14 @@ router.get('/:videoId/stream', async (req, res) => {
       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
       const chunkSize = (end - start) + 1;
 
+      logger.info('Handling range request', {
+        videoId,
+        start,
+        end,
+        chunkSize,
+        fileSize
+      });
+
       res.writeHead(206, {
         'Content-Range': `bytes ${start}-${end}/${fileSize}`,
         'Accept-Ranges': 'bytes',
@@ -178,11 +186,38 @@ router.get('/:videoId/stream', async (req, res) => {
         'Content-Type': video.mime_type || 'video/mp4'
       });
 
-      const dataStream = await minioClient.getObject(bucketName, videoKey, start, chunkSize);
+      // Use getPartialObject for efficient range requests
+      const dataStream = await minioClient.getPartialObject(bucketName, videoKey, start, chunkSize);
+      
+      // Handle stream errors
+      dataStream.on('error', (err) => {
+        logger.error('Stream error during range request', {
+          videoId,
+          error: err.message,
+          start,
+          end
+        });
+        if (!res.headersSent) {
+          res.status(500).end();
+        } else {
+          res.destroy();
+        }
+      });
+
+      // Handle client disconnect
+      req.on('close', () => {
+        if (!res.writableEnded) {
+          logger.info('Client disconnected during range streaming', { videoId });
+          dataStream.destroy();
+        }
+      });
+
       dataStream.pipe(res);
 
     } else {
       // Stream entire file
+      logger.info('Handling full file request', { videoId, fileSize });
+
       res.writeHead(200, {
         'Content-Length': fileSize,
         'Content-Type': video.mime_type || 'video/mp4',
@@ -190,6 +225,28 @@ router.get('/:videoId/stream', async (req, res) => {
       });
 
       const dataStream = await minioClient.getObject(bucketName, videoKey);
+      
+      // Handle stream errors
+      dataStream.on('error', (err) => {
+        logger.error('Stream error during full request', {
+          videoId,
+          error: err.message
+        });
+        if (!res.headersSent) {
+          res.status(500).end();
+        } else {
+          res.destroy();
+        }
+      });
+
+      // Handle client disconnect
+      req.on('close', () => {
+        if (!res.writableEnded) {
+          logger.info('Client disconnected during full streaming', { videoId });
+          dataStream.destroy();
+        }
+      });
+
       dataStream.pipe(res);
     }
 
