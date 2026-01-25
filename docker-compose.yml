@@ -123,8 +123,6 @@ services:
     build:
       context: ./consumer
       dockerfile: Dockerfile
-    ports:
-      - "${CONSUMER_PORT}:5000"
     environment:
       - MINIO_ENDPOINT=${MINIO_ENDPOINT}
       - MINIO_PORT=${MINIO_PORT}
