@@ -74,8 +74,8 @@ const VideoUpload = () => {
 
       console.log('Upload successful:', response);
       
-      // Redirect to video player
-      navigate(`/watch/${response.videoId}`);
+      // Redirect to HOME page after upload
+      navigate(`/`);
     } catch (err) {
       console.error('Upload failed:', err);
       setError(err.response?.data?.message || 'Failed to upload video. Please try again.');

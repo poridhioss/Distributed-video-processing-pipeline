@@ -74,7 +74,9 @@ const VideoPlayer = () => {
       controls: true,
       autoplay: false,
       preload: 'auto',
-      fluid: true,
+      responsive: true,
+      aspectRatio: '16:9',
+      fill: false,
       controlBar: {
         children: [
           'playToggle',
