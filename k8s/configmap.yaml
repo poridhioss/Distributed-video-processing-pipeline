@@ -14,9 +14,18 @@ data:
   RABBITMQ_URL: "amqp://admin:admin@rabbitmq-service:5672"
   RABBITMQ_QUEUE: "video_processing"
   
+  # Database Configuration
+  DATABASE_HOST: "postgres-service"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "video_processing_db"
+  DATABASE_USER: "videouser"
+  
   # Producer Configuration
   PRODUCER_PORT: "4000"
   NODE_ENV: "production"
+  
+  # Frontend Configuration
+  FRONTEND_PORT: "80"
   
   # Upload Configuration
   MAX_FILE_SIZE: "524288000"

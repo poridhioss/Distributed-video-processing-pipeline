@@ -17,6 +17,16 @@ spec:
     spec:
       # Wait for dependencies
       initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - |
+          until nc -z postgres-service 5432; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
       - name: wait-for-minio
         image: busybox:1.36
         command:
@@ -86,6 +96,36 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        - name: DATABASE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: video-config
+              key: DATABASE_HOST
+        - name: DATABASE_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: video-config
+              key: DATABASE_PORT
+        - name: DATABASE_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: video-config
+              key: DATABASE_NAME
+        - name: DATABASE_USER
+          valueFrom:
+            configMapKeyRef:
+              name: video-config
+              key: DATABASE_USER
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: video-secrets
+              key: DATABASE_PASSWORD
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: video-config
+              key: NODE_ENV
         resources:
           requests:
             memory: "1Gi"
